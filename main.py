@@ -47,8 +47,8 @@ advertisement_2000 = Advertisement("images/vb2000.png", "👾2000 VB ПОДАР�
 advertisement_3000 = Advertisement("images/vb3000.png", "👾3000 VB ПОДАРКОМ👾 Быстро и Надёжно👾", description, 1500, 1386, comment)
 
 # Функции
-def copy_image_to_clipboard():
-  image = Image.open(advertisement_500.photo_path)
+def copy_image_to_clipboard(advertisment):
+  image = Image.open(advertisment.photo_path)
   output = BytesIO()
   image.convert('RGB').save(output, 'BMP')
   data = output.getvalue()[14:]
@@ -68,7 +68,7 @@ def next_step(message):
   except:
     bot.send_message(message.chat.id, 'Не удалось перейти к следующему этапу 🚫')
 
-def initialize_sell(message, number_count_vb_btn):
+def post_advertisment(message, number_count_vb_btn, advertisment):
   driver.get("https://playerok.com/sell")
   time.sleep(3)
   if driver.current_url == "https://playerok.com/sell":
@@ -100,7 +100,7 @@ def initialize_sell(message, number_count_vb_btn):
     next_step(message)
     # Вставка изоображения
     try:
-      copy_image_to_clipboard()
+      copy_image_to_clipboard(advertisment)
       actions = ActionChains(driver)
       actions.key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
     except:
@@ -109,7 +109,7 @@ def initialize_sell(message, number_count_vb_btn):
     next_step(message)
     # Вставка заголовка обьявления
     try:
-      pyperclip.copy(advertisement_500.title)
+      pyperclip.copy(advertisment.title)
       actions = ActionChains(driver)
       actions.key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
     except:
@@ -118,7 +118,7 @@ def initialize_sell(message, number_count_vb_btn):
     next_step(message)
     # Вставка описания
     try:
-      pyperclip.copy(advertisement_500.description)
+      pyperclip.copy(advertisment.description)
       actions = ActionChains(driver)
       actions.key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
     except:
@@ -127,7 +127,7 @@ def initialize_sell(message, number_count_vb_btn):
     next_step(message)
     # Вставка цены
     try:
-      pyperclip.copy(advertisement_500.price)
+      pyperclip.copy(advertisment.price)
       actions = ActionChains(driver)
       actions.key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
     except:
@@ -140,7 +140,7 @@ def initialize_sell(message, number_count_vb_btn):
         EC.presence_of_element_located((By.TAG_NAME, "textarea"))
       )
       element_text_area.click()
-      pyperclip.copy(advertisement_500.comment)
+      pyperclip.copy(advertisment.comment)
       actions = ActionChains(driver)
       actions.key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
     except:
@@ -153,6 +153,36 @@ def initialize_sell(message, number_count_vb_btn):
       element_next_button.click()
     except:
       bot.send_message(message.chat.id, 'Не удалось перейти к следующему этапу 🚫')
+    # Открытие редакитирование обьявления
+    try:
+      element_edit_ad = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "div.MuiBox-root.mui-style-4g6ai3"))
+      )
+      element_edit_ad.click()
+    except:
+      bot.send_message(message.chat.id, 'Не удалось открыть обьявление 🚫')
+    # Вставка скидочной цены
+    try:
+      element_sale_price = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "div.MuiBox-root.mui-style-awfqns"))
+      )
+      element_sale_price.click()
+      pyperclip.copy(advertisment.sale)
+      actions = ActionChains(driver)
+      actions.key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
+    except:
+      bot.send_message(message.chat.id, 'Не удалось установить скидочную цену 🚫')
+    # Переход на следуйщий этап
+    next_step(message)
+    # Публикация обьявления
+    try:
+      element_publish_btn = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, 'button.MuiBox-root.mui-style-o1d96g'))
+      )
+      element_publish_btn.click()
+      bot.send_message(message.chat.id, 'Обьявление опубликовано ✅')
+    except:
+      bot.send_message(message.chat.id, 'Не удалось опубликовать обьявление 🚫')
   else:
     bot.send_message(message.chat.id, "Не удалось перейти на страницу: https://playerok.com/sell 🚫")
 
@@ -199,10 +229,26 @@ def set_verification_code(message):
   
 @bot.message_handler(commands=['500'])
 def start(message):
-  initialize_sell(message, 1)
+  post_advertisment(message, 1, advertisement_500)
 
 @bot.message_handler(commands=['800'])
 def start(message):
-  bot.send_message(message.chat.id, 'lox')
+  post_advertisment(message, 1, advertisement_800)
+
+@bot.message_handler(commands=['1200'])
+def start(message):
+  post_advertisment(message, 2, advertisement_1200)
+
+@bot.message_handler(commands=['1500'])
+def start(message):
+  post_advertisment(message, 3, advertisement_1500)
+
+@bot.message_handler(commands=['2000'])
+def start(message):
+  post_advertisment(message, 4, advertisement_2000)
+
+@bot.message_handler(commands=['3000'])
+def start(message):
+  post_advertisment(message, 5, advertisement_3000)
 
 bot.polling()
